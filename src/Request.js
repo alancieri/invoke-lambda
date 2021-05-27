@@ -1,5 +1,3 @@
-import { ARN } from '@aws-sdk/util-arn-parser/src/index'
-
 const AWS = require('aws-sdk')
 
 const validate = (str) => typeof str === 'string' && str.indexOf('arn:') === 0 && str.split(':').length >= 6
