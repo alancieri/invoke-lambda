@@ -1,0 +1,22 @@
+{
+  "name": "invoke-lambda",
+  "version": "1.0.0",
+  "description": "Lambda Invoke Layer",
+  "main": "index.js",
+  "scripts": {
+    "test": "node test.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/alancieri/invoke-lambda.git"
+  },
+  "author": "Alessandro Lancieri <alessandro@oneabee.com>",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/alancieri/invoke-lambda/issues"
+  },
+  "homepage": "https://github.com/alancieri/invoke-lambda#readme",
+  "devDependencies": {
+    "aws-sdk": "^2.916.0"
+  }
+}
