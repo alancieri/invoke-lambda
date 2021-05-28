@@ -1,38 +1,18 @@
 const AWS = require('aws-sdk')
-
-const validate = (str) => typeof str === 'string' && str.indexOf('arn:') === 0 && str.split(':').length >= 6
-
-const parse = (arn) => {
-    const segments = arn.split(':')
-    if (segments.length < 6 || segments[0] !== 'arn') throw new Error('Malformed ARN')
-    const [
-        ,
-        //Skip "arn" literal
-        partition,
-        service,
-        region,
-        accountId,
-        ...resource
-    ] = segments
-    
-    return {
-        partition,
-        service,
-        region,
-        accountId,
-        resource: resource.join(':'),
-    }
-}
-
-const isRegion = (str) => {
-    return /(us(-gov)?|ap|ca|cn|eu|sa)-(central|(north|south)?(east|west)?)-\d/g.test(str)
-}
-
-const isArn = (str) => {
-    return validate(str)
-}
+const { isAWSRegion, isAWSArn, parseAWSArn } = require('./helpers')
 
 const Request = {
+    async invokeEvent (fnName, payload, ...args) {
+        let region = process.env.AWS_REGION || 'us-east-1'
+        let options = {}
+        args.map(element => {
+            if (typeof element === 'string' && isAWSRegion(element)) region = element
+            if (typeof element === 'object') options = { ...options, ...element }
+        })
+        options['InvocationType'] = 'Event'
+        return Request.invoke(fnName, payload, region, options)
+    },
+    
     async invoke (fnName, payload, ...args) {
         
         let region = process.env.AWS_REGION || 'us-east-1'
@@ -40,7 +20,7 @@ const Request = {
             ReturnParsedPayload: true
         }
         args.map(element => {
-            if (typeof element === 'string' && isRegion(element)) region = element
+            if (typeof element === 'string' && isAWSRegion(element)) region = element
             if (typeof element === 'object') options = { ...options, ...element }
         })
         payload = JSON.parse(JSON.stringify(payload))
@@ -63,8 +43,8 @@ const Request = {
     async _call (req, region) {
         try {
             
-            if (isArn(req['FunctionName']))
-                region = parse(req['FunctionName'])['region']
+            if (isAWSArn(req['FunctionName']))
+                region = parseAWSArn(req['FunctionName'])['region']
             
             const lambda = new AWS['Lambda']({ region })
             
@@ -100,5 +80,20 @@ class RequestLambdaError extends Error {
 
 module.exports = {
     Request,
+    /**
+     *
+     * @param fnName
+     * @param payload
+     * @param args
+     * @returns {Promise<any>}
+     */
     invoke: (fnName, payload, ...args) => Request.invoke(fnName, payload, ...args),
+    /**
+     *
+     * @param fnName
+     * @param payload
+     * @param args
+     * @returns {Promise<Error | any | undefined>}
+     */
+    invokeEvent: (fnName, payload, ...args) => Request.invokeEvent(fnName, payload, ...args)
 }
