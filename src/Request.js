@@ -51,7 +51,7 @@ const Request = {
             const ReturnParsedPayload = req['ReturnParsedPayload']
             delete req['ReturnParsedPayload']
             
-            console.log({ InvokeStatement: req, Region: region })
+            // console.log({ InvokeStatement: req, Region: region })
             const data = await lambda.invoke(req).promise()
             
             if (req['InvocationType'] === 'RequestResponse') {
